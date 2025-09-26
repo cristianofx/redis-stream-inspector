@@ -1,0 +1,20 @@
+<!-- ConfirmDialogWindow.axaml -->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:RedisInspector.UI.ViewModels"
+        x:Class="RedisInspector.UI.Views.ConfirmDialogWindow"
+        x:DataType="vm:ConfirmDialogViewModel"
+        Width="420" Height="220" Title="Confirm"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- Example bindings now compile-checked -->
+    <StackPanel Margin="16" Spacing="12">
+        <TextBlock Text="{Binding Title}" FontWeight="Bold" />
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="Cancel" Command="{Binding NoCommand}" IsCancel="True"/>
+            <Button Content="OK"     Command="{Binding YesCommand}" IsDefault="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

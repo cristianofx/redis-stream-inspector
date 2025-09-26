@@ -1,0 +1,8 @@
+dotnet publish src/RedisInspector.CLI/RedisInspector.CLI.csproj -c Release -r win-x64 --self-contained true `
+>>   -p:PublishSingleFile=true -p:PublishTrimmed=false `
+>>   -p:AssemblyName=redis-inspector `
+>>   -o .\publish\win-x64
+
+
+
+dotnet publish src/RedisInspector.UI/RedisInspector.UI.csproj ` -c Release -r win-x64 --self-contained true ` -p:PublishSingleFile=true -p:PublishTrimmed=false ` -o publish\ui\win-x64

@@ -1,0 +1,232 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:RedisInspector.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="650"
+        x:Class="RedisInspector.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/redis-inspector-icon.ico"
+        Title="Redis Inspector"
+		WindowState="Maximized">
+	<!-- Global shortcuts -->
+	<Window.KeyBindings>
+		<KeyBinding Gesture="Ctrl+F" Command="{Binding ShowFindCommand}" />
+		<KeyBinding Gesture="Meta+F" Command="{Binding ShowFindCommand}" /><!-- macOS -->
+		<KeyBinding Gesture="F3"       Command="{Binding FindNextTextCommand}" />
+		<KeyBinding Gesture="Shift+F3" Command="{Binding FindPrevTextCommand}" />
+	</Window.KeyBindings>
+
+	<Design.DataContext>
+		<vm:MainWindowViewModel />
+	</Design.DataContext>
+
+	<SplitView IsPaneOpen="{Binding IsOptionsOpen}"
+			   DisplayMode="Inline"
+			   OpenPaneLength="360"
+			   CompactPaneLength="0">
+
+		<!-- LEFT: collapsible options pane -->
+		<SplitView.Pane>
+			<Border Padding="12" VerticalAlignment="Stretch">
+				<!-- Fixed top (profile + add/update/delete), scrollable middle, fixed bottom (run/cancel + status) -->
+				<Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+
+					<!-- Row 0: Profiles bar -->
+					<StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+						<TextBlock Text="Connection:" VerticalAlignment="Center" />
+						<ComboBox Width="200"
+								  ItemsSource="{Binding ConnectionProfiles}"
+								  SelectedItem="{Binding SelectedConnectionProfile}">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding Name}" />
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
+
+					<!-- Row 1: Add/Update/Delete (fixed below combobox) -->
+					<StackPanel Grid.Row="1"
+								Orientation="Horizontal"
+								Spacing="8"
+								Margin="0,0,0,12"
+								HorizontalAlignment="Left">
+						<Button Content="Add"    Command="{Binding AddConnectionCommand}" />
+						<Button Content="Edit" Command="{Binding UpdateConnectionCommand}" />
+						<Button Content="Delete" Command="{Binding DeleteConnectionCommand}" />
+					</StackPanel>
+
+					<!-- Row 2: Scrollable fields -->
+					<ScrollViewer Grid.Row="2" Padding="8,0,22,0" VerticalScrollBarVisibility="Auto">
+						<StackPanel Spacing="8">
+							<Separator />
+
+							<TextBlock Text="Streams (comma separated)" />
+							<TextBox Text="{Binding SearchOptions.StreamsCsv, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Watermark="stream1,stream2..." />
+
+							<TextBlock Text="Search" FontWeight="Bold" />
+							<TextBlock Text="Find Field in Message value (if JSON, optional)" />
+							<TextBox Text="{Binding SearchOptions.FindField}" Watermark="asset_id" />
+
+							<StackPanel Orientation="Horizontal" Spacing="6">
+								<TextBlock Text="Find Equals (optional)" VerticalAlignment="Center"/>
+								<TextBlock Text="ⓘ"
+										   VerticalAlignment="Center"
+										   Foreground="Gray"
+										   FontSize="12"
+										   Cursor="Hand">
+									<ToolTip.Tip>
+										This compares against the message value.
+										• If “Find Field” is set: returns entries where that field’s value equals this text.
+										• If “Find Field” is empty: returns entries whose message contains this text.
+										Notes: The value is taken from “Message Key” (default “message”). If it’s JSON, it is parsed before matching.
+									</ToolTip.Tip>
+								</TextBlock>
+							</StackPanel>
+							<TextBox Text="{Binding SearchOptions.FindEq}" Watermark="4BD0..." />
+
+							<TextBlock Text="Message Key" />
+							<TextBox Text="{Binding SearchOptions.JsonField}" Watermark="message" />
+
+							<TextBlock Text="Find Last (tail N per stream. 0 = searches all)" />
+							<NumericUpDown Value="{Binding SearchOptions.FindLast}"
+										   Minimum="0" Maximum="1000000"
+										   Increment="5"
+										   HorizontalAlignment="Stretch" MinWidth="0" />
+
+							<TextBlock Text="Find Max (total matches)" />
+							<NumericUpDown Value="{Binding SearchOptions.FindMax}"
+										   Minimum="1" Maximum="1000000"
+										   Increment="5"
+										   HorizontalAlignment="Stretch" MinWidth="0" />
+
+							<Border Height="70" />
+						</StackPanel>
+					</ScrollViewer>
+
+					<!-- Row 3: Run/Cancel (fixed bottom) -->
+					<StackPanel Grid.Row="3"
+								Orientation="Horizontal"
+								Spacing="8"
+								Margin="0,8,0,0">
+						<Button Content="Run"
+								Command="{Binding StartSearchCommand}"
+								IsEnabled="{Binding CanStart}" />
+						<Button Content="Cancel"
+								Command="{Binding CancelCommand}" />
+					</StackPanel>
+
+					<!-- Row 4: Status (fixed bottom) -->
+					<TextBlock Grid.Row="4"
+							   Margin="0,6,0,0"
+							   Text="{Binding Status}"
+							   Foreground="{Binding StatusBrush}" />
+				</Grid>
+			</Border>
+		</SplitView.Pane>
+
+		<!-- RIGHT: content area -->
+		<SplitView.Content>
+			<Grid RowDefinitions="Auto,*" Margin="12">
+				<StackPanel Orientation="Horizontal" Spacing="8" Grid.Row="0">
+					<ToggleButton Content="Options"
+								  IsChecked="{Binding IsOptionsOpen}"
+								  Width="90" />
+					<TextBlock Margin="12,0,0,0"
+							   VerticalAlignment="Center"
+							   Text="{Binding Status}"
+							   Foreground="{Binding StatusBrush}" />
+				</StackPanel>
+
+				<Grid Grid.Row="1" Margin="12">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="0.5*" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<!-- Top: results -->
+					<ListBox Grid.Row="0"
+							 ItemsSource="{Binding Results}"
+							 SelectedItem="{Binding SelectedItem}">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Vertical" Margin="4">
+									<TextBlock Text="{Binding Stream}" FontWeight="Bold" />
+									<TextBlock Text="{Binding IdDateTimeFormated}" FontFamily="Consolas, Courier New" />
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+
+					<GridSplitter Grid.Row="1"
+								  Height="6"
+								  HorizontalAlignment="Stretch"
+								  Background="DarkSlateGray"
+								  ResizeDirection="Rows"
+								  ResizeBehavior="PreviousAndNext"
+								  ShowsPreview="True"
+								  Cursor="SizeNorthSouth" />
+
+					<!-- Bottom: find bar + raw viewer -->
+					<Grid Grid.Row="2">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="*" />
+						</Grid.RowDefinitions>
+
+						<!-- Find bar (hidden by default) {Binding IsFindVisible} -->
+						<Grid Grid.Row="0"
+							  ColumnDefinitions="Auto,220,Auto,Auto,Auto,Auto,Auto,*,Auto"
+							  IsVisible="{Binding IsFindVisible}"
+							  Margin="0,13,0,8">
+							<TextBlock Grid.Column="0" Text="Find:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+
+							<TextBox x:Name="FindBox"
+									 Grid.Column="1"
+									 Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+									 Watermark="search...">
+								<TextBox.KeyBindings>
+									<KeyBinding Gesture="Enter"        Command="{Binding FindNextTextCommand}" />
+									<KeyBinding Gesture="Shift+Enter"  Command="{Binding FindPrevTextCommand}" />
+								</TextBox.KeyBindings>
+							</TextBox>
+
+							<CheckBox Grid.Column="2" Content="Match case" IsChecked="{Binding MatchCase}" Margin="8,0,0,0"/>
+							<CheckBox Grid.Column="3" Content="Whole word" IsChecked="{Binding WholeWord}" Margin="8,0,0,0"/>
+
+							<Button Grid.Column="4" Content="Prev"  Command="{Binding FindPrevTextCommand}" Margin="8,0,0,0"/>
+							<Button Grid.Column="5" Content="Next"  Command="{Binding FindNextTextCommand}" />
+							<Button Grid.Column="6" Content="Clear" Command="{Binding ClearSearchCommand}" />
+
+							<!-- Dismiss (X) -->
+							<Button Grid.Column="7"
+									Content="✕"
+									Command="{Binding HideFindCommand}"
+									ToolTip.Tip="Close search bar"
+									Width="28" Height="28" Margin="30,0,0,0"/>
+							
+							<TextBlock Grid.Column="8" Margin="8,0,0,0" Foreground="Gray"
+									   Text="{Binding SearchStatus}" VerticalAlignment="Center"/>
+
+							
+						</Grid>
+
+						<!-- Viewer -->
+						<Border Grid.Row="1" Padding="8" BorderThickness="1">
+							<ScrollViewer>
+								<TextBox x:Name="RawBox"
+										 AcceptsReturn="True"
+										 IsReadOnly="True"
+										 TextWrapping="Wrap"
+										 FontFamily="Consolas, Courier New"
+										 Text="{Binding SelectedRawMessage}" />
+							</ScrollViewer>
+						</Border>
+					</Grid>
+				</Grid>
+			</Grid>
+		</SplitView.Content>
+	</SplitView>
+</Window>

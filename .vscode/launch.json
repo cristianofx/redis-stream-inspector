@@ -1,0 +1,65 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET 8 Launch (Direct – local Redis)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/bin/Debug/net8.0/RedisInspector.CLI.dll",
+      "args": [
+        "--redis", "redis://:${env:REDIS_PASS}@localhost:6379",
+        "--streams", "mystream",
+        "--interval", "2"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.vscode/.env"
+    },
+    {
+      "name": ".NET 8 Launch (SSH tunnel – password)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/bin/Debug/net9.0/RedisInspector.CLI.dll",
+      "args": [
+        "--redis", "redis://localhost:6389",
+        "--streams", "AssetOutputStream",
+        "--interval", "5",
+        "--ssh-port", "22",
+        "--ssh-user", "primelisbon-d1",
+        "--ssh-redis-host", "127.0.0.1",
+        "--ssh-redis-port", "6389",
+        "--find-field", "asset_id",
+        "--find-eq", "4BD039D7B89AD252331E3DF31EC73CA0",
+        "--find-max", "100",
+        "--json-field", "message",
+        "--find-last", "500",
+        "--json"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.vscode/.env"
+    },
+    {
+      "name": ".NET 8 Launch (SSH tunnel + TLS + key auth)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/bin/Debug/net8.0/RedisInspector.CLI.dll",
+      "args": [
+        "--redis", "rediss://:${env:REDIS_PASS}@ignored:6380",
+        "--ssl-host", "redis.internal",
+        "--streams", "events",
+        "--interval", "5",
+        "--ssh-host", "bastion.example",
+        "--ssh-user", "ops",
+        "--ssh-key", "${env:SSH_KEY_PATH}",
+        "--ssh-remote-port", "6380"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.vscode/.env"
+    }
+  ]
+}

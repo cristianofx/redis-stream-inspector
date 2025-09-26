@@ -1,0 +1,66 @@
+LICENSE
+README.md
+
+# Ignore .NET build artifacts
+**/bin/
+**/obj/
+**/*.csproj.user
+**/*.obj
+**/*.dll
+**/*.exe
+**/*.pdb
+**/*.zip
+**/*.tgz
+**/*.gz
+**/*.bz2
+**/*.7z
+**/*.rar
+**/*.xz
+**/*.nuget.props
+**/*.nuget.targets
+
+# Ignore Visual Studio files
+.vscode/
+*.suo
+*.user
+*.sln.docstates
+*.cache
+*.vs
+*.vspscc
+*.vssscc
+*.log
+*.tlog
+*.testsettings
+ipch/
+*.pvt.xml
+*.seed
+*.pidb
+*.svclog
+*.mdf
+*.ldf
+*.bak
+*.tmp
+*.DocState
+
+# Ignore NuGet packages
+*.nupkg
+**/packages/*
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+
+# Ignore Node.js files
+**/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore .NET tool files
+**/.store/
+**/*.opendb
+
+# Ignore Docker files
+**/Dockerfile*
+**/docker-compose*
+**/docker-compose.override*
+*.dockerignore
