@@ -82,36 +82,117 @@ namespace RedisInspector.CLI.src.RedisInspector.Core.Services
                 }
                 else
                 {
-                    // Forward scan in range: XRANGE [from..to]
-                    string from = string.IsNullOrWhiteSpace(_opts.FindFromId) ? "-" : _opts.FindFromId;
-                    string to = string.IsNullOrWhiteSpace(_opts.FindToId) ? "+" : _opts.FindToId;
-                    string? lastId = null;
-
-                    while (remaining > 0)
+                    if (_opts.NewestFirst)
                     {
-                        ct.ThrowIfCancellationRequested();
+                        // Descending scan: newest -> oldest
+                        string from = string.IsNullOrWhiteSpace(_opts.FindFromId) ? "-" : _opts.FindFromId;
+                        string to = string.IsNullOrWhiteSpace(_opts.FindToId) ? "+" : _opts.FindToId;
 
-                        var page = await _db.StreamRangeAsync(stream, minId: from, maxId: to, count: _opts.FindPage, messageOrder: Order.Ascending)
-                                            .ConfigureAwait(false);
-                        if (page is null || page.Length == 0) break;
+                        string? lastBoundaryId = null; // move the upper boundary down each page
 
-                        foreach (var entry in page)
+                        while (remaining > 0)
                         {
-                            if (lastId != null && entry.Id == lastId) continue; // de-dup
+                            ct.ThrowIfCancellationRequested();
 
-                            if (Matches(entry, cmp, out string? raw))
+                            var page = await _db.StreamRangeAsync(
+                                stream,
+                                minId: from,
+                                maxId: lastBoundaryId ?? to,
+                                count: _opts.FindPage,
+                                messageOrder: Order.Descending
+                            ).ConfigureAwait(false);
+
+                            if (page is null || page.Length == 0) break;
+
+                            foreach (var entry in page)
                             {
-                                var hit = ToHit(stream, entry, raw);
-                                yield return hit;
-                                remaining--;
-                                if (remaining <= 0) yield break;
-                            }
-                        }
+                                if (lastBoundaryId != null && entry.Id == lastBoundaryId) continue; // de-dup
 
-                        lastId = page[^1].Id;
-                        from = lastId; // inclusive; next loop skips duplicate
-                        if (page.Length < _opts.FindPage) break;
+                                if (Matches(entry, cmp, out string? raw))
+                                {
+                                    var hit = ToHit(stream, entry, raw);
+                                    yield return hit;
+                                    remaining--;
+                                    if (remaining <= 0) yield break;
+                                }
+                            }
+
+                            // Next page continues *below* the oldest id of this page
+                            lastBoundaryId = page[^1].Id;
+                            if (page.Length < _opts.FindPage) break;
+                        }
                     }
+                    else
+                    {
+                        // Forward scan in range: XRANGE [from..to] ascending (existing code)
+                        string from = string.IsNullOrWhiteSpace(_opts.FindFromId) ? "-" : _opts.FindFromId;
+                        string to = string.IsNullOrWhiteSpace(_opts.FindToId) ? "+" : _opts.FindToId;
+                        string? lastId = null;
+
+                        while (remaining > 0)
+                        {
+                            ct.ThrowIfCancellationRequested();
+
+                            var page = await _db.StreamRangeAsync(
+                                stream,
+                                minId: from,
+                                maxId: to,
+                                count: _opts.FindPage,
+                                messageOrder: Order.Ascending
+                            ).ConfigureAwait(false);
+
+                            if (page is null || page.Length == 0) break;
+
+                            foreach (var entry in page)
+                            {
+                                if (lastId != null && entry.Id == lastId) continue; // de-dup
+
+                                if (Matches(entry, cmp, out string? raw))
+                                {
+                                    var hit = ToHit(stream, entry, raw);
+                                    yield return hit;
+                                    remaining--;
+                                    if (remaining <= 0) yield break;
+                                }
+                            }
+
+                            lastId = page[^1].Id;
+                            from = lastId; // inclusive; next loop skips duplicate
+                            if (page.Length < _opts.FindPage) break;
+                        }
+                    }
+
+
+                    //// Forward scan in range: XRANGE [from..to]
+                    //string from = string.IsNullOrWhiteSpace(_opts.FindFromId) ? "-" : _opts.FindFromId;
+                    //string to = string.IsNullOrWhiteSpace(_opts.FindToId) ? "+" : _opts.FindToId;
+                    //string? lastId = null;
+
+                    //while (remaining > 0)
+                    //{
+                    //    ct.ThrowIfCancellationRequested();
+
+                    //    var page = await _db.StreamRangeAsync(stream, minId: from, maxId: to, count: _opts.FindPage, messageOrder: Order.Ascending)
+                    //                        .ConfigureAwait(false);
+                    //    if (page is null || page.Length == 0) break;
+
+                    //    foreach (var entry in page)
+                    //    {
+                    //        if (lastId != null && entry.Id == lastId) continue; // de-dup
+
+                    //        if (Matches(entry, cmp, out string? raw))
+                    //        {
+                    //            var hit = ToHit(stream, entry, raw);
+                    //            yield return hit;
+                    //            remaining--;
+                    //            if (remaining <= 0) yield break;
+                    //        }
+                    //    }
+
+                    //    lastId = page[^1].Id;
+                    //    from = lastId; // inclusive; next loop skips duplicate
+                    //    if (page.Length < _opts.FindPage) break;
+                    //}
                 }
             }
         }

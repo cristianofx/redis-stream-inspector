@@ -5,6 +5,8 @@
     /// </summary>
     public sealed class SearchOptions
     {
+        /// <summary>false = head->tail (ascending), true = tail->head (descending).</summary>
+        public bool NewestFirst { get; set; } // 
         /// <summary>Stream keys or glob patterns (e.g., "orders*", "AssetOutputStream").</summary>
         public List<string> Streams { get; set; } = new();
 

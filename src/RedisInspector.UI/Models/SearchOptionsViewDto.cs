@@ -16,6 +16,7 @@ namespace RedisInspector.UI.Models
         [ObservableProperty] private int findPage = 200;
         [ObservableProperty] private bool findCaseInsensitive = false;
         [ObservableProperty] private bool messageOnly = true;
+        [ObservableProperty] private bool newestFirst = false;
 
 
         public List<string> Streams

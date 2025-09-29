@@ -101,6 +101,9 @@
 										   Increment="5"
 										   HorizontalAlignment="Stretch" MinWidth="0" />
 
+							<!-- Newest-first toggle -->
+							<CheckBox Content="Newest first (tail → head)"
+									  IsChecked="{Binding SearchOptions.NewestFirst}" />
 							<Border Height="70" />
 						</StackPanel>
 					</ScrollViewer>

@@ -263,7 +263,8 @@ public partial class MainWindowViewModel : ObservableObject
                 FindCaseInsensitive = SearchOptions.FindCaseInsensitive,
                 JsonField = string.IsNullOrWhiteSpace(SearchOptions.JsonField) ? "message" : SearchOptions.JsonField!,
                 JsonPath = string.IsNullOrWhiteSpace(SearchOptions.JsonPath) ? null : SearchOptions.JsonPath,
-                MessageOnly = SearchOptions.MessageOnly
+                MessageOnly = SearchOptions.MessageOnly,
+                NewestFirst = SearchOptions.NewestFirst
             };
 
             var runner = new SearchRunner(_mux, db, options);
